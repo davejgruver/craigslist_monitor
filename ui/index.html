@@ -6,243 +6,65 @@
 <title>Craigslist Monitor</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f5f4f0;
-    --surface: #ffffff;
-    --border: rgba(0,0,0,0.1);
-    --text: #1a1a1a;
-    --muted: #666;
-    --accent: #e8440a;
-    --accent-light: #fff0eb;
-    --green: #1a7a4a;
-    --green-light: #e8f5ee;
-    --amber: #b85c00;
-    --amber-light: #fff8ee;
-    --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --bg: #f5f4f0; --surface: #ffffff; --border: rgba(0,0,0,0.1);
+    --text: #1a1a1a; --muted: #666; --accent: #e8440a; --accent-light: #fff0eb;
+    --green: #1a7a4a; --green-light: #e8f5ee; --amber: #b85c00;
+    --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 56px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; gap: 12px; height: 56px; position: sticky; top: 0; z-index: 10; }
   header h1 { font-size: 17px; font-weight: 600; }
-  header .worker-url { font-size: 12px; color: var(--muted); margin-left: auto; }
-
   .main { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem; }
-
-  /* Login screen */
-  #login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-  }
-  .login-card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 2rem;
-    width: 100%;
-    max-width: 360px;
-    box-shadow: var(--shadow);
-  }
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  .login-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 2rem; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
   .login-card h2 { font-size: 18px; margin-bottom: 4px; }
   .login-card p { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; }
-
-  /* Cards */
-  .card {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: var(--shadow);
-  }
-  .card-title {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1rem;
-  }
-
-  /* Form elements */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+  .card-title { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
   label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 4px; }
-  input, select {
-    width: 100%;
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    font-size: 14px;
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  input, select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 14px; background: var(--surface); color: var(--text); outline: none; }
   input:focus, select:focus { border-color: var(--accent); }
   .field { margin-bottom: 14px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .price-row { display: grid; grid-template-columns: 1fr 28px 1fr; gap: 8px; align-items: end; }
-  .price-sep { text-align: center; padding-bottom: 10px; color: var(--muted); font-size: 14px; }
-
-  /* Tags */
-  .tag-area {
-    min-height: 42px;
-    padding: 6px 8px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    background: #fafaf8;
-    margin-bottom: 8px;
-  }
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--accent-light);
-    color: var(--accent);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 3px 10px;
-    border-radius: 20px;
-  }
-  .tag button {
-    background: none;
-    border: none;
-    color: var(--accent);
-    cursor: pointer;
-    font-size: 15px;
-    line-height: 1;
-    padding: 0;
-    opacity: 0.6;
-  }
-  .tag button:hover { opacity: 1; }
+  .price-sep { text-align: center; padding-bottom: 10px; color: var(--muted); }
+  .tag-area { min-height: 42px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; display: flex; flex-wrap: wrap; gap: 5px; background: #fafaf8; margin-bottom: 8px; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+  .tag button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 15px; line-height: 1; padding: 0; opacity: 0.6; }
   .tag-hint { font-size: 12px; color: var(--muted); padding: 4px 2px; }
   .add-row { display: flex; gap: 8px; }
   .add-row input { flex: 1; }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border-radius: 7px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    transition: background 0.12s, transform 0.1s;
-  }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: background 0.12s; }
   .btn:hover { background: #f0efeb; }
-  .btn:active { transform: scale(0.98); }
   .btn-primary { background: var(--accent); color: #fff; border-color: transparent; }
   .btn-primary:hover { background: #c73a08; }
   .btn-sm { padding: 5px 12px; font-size: 12px; }
   .btn-danger { background: #fff0f0; color: #c0392b; border-color: transparent; }
-  .btn-danger:hover { background: #fde0e0; }
   .btn-full { width: 100%; justify-content: center; }
   .btn-group { display: flex; gap: 8px; margin-top: 1rem; }
-
-  /* Search list */
-  .search-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px;
-    background: #fafaf8;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    margin-bottom: 8px;
-  }
-  .dot {
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    margin-top: 5px;
-    flex-shrink: 0;
-    background: var(--green);
-  }
+  .search-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: #fafaf8; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: var(--green); }
   .dot.paused { background: var(--amber); }
   .search-info { flex: 1; min-width: 0; }
   .search-name { font-weight: 600; font-size: 14px; }
   .search-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .search-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .empty { text-align: center; padding: 2rem; color: var(--muted); font-size: 14px; }
-
-  /* Log */
-  .log-entry {
-    display: flex;
-    gap: 10px;
-    font-size: 13px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
+  .log-entry { display: flex; gap: 10px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .log-entry:last-child { border-bottom: none; }
   .log-time { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
-
-  /* Toast */
-  #toast {
-    position: fixed;
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #1a1a1a;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: transform 0.25s;
-    z-index: 100;
-    pointer-events: none;
-  }
+  #toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; transition: transform 0.25s; z-index: 100; pointer-events: none; }
   #toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* Badge */
-  .badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: var(--green-light);
-    color: var(--green);
-    margin-left: 6px;
-  }
-
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: var(--green-light); color: var(--green); margin-left: 6px; }
   .divider { height: 1px; background: var(--border); margin: 1rem 0; }
   .section-title { font-size: 15px; font-weight: 600; margin-bottom: 1rem; }
-
+  .error-box { background: #fff0f0; border: 1px solid #fcc; border-radius: 7px; padding: 10px 14px; font-size: 13px; color: #c0392b; margin-bottom: 1rem; display: none; }
   #app { display: none; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <h2>🔔 CL Monitor</h2>
@@ -255,48 +77,38 @@
       <label>Password</label>
       <input id="login-pw" type="password" placeholder="Your UI_PASSWORD" />
     </div>
+    <div class="error-box" id="login-error"></div>
     <button class="btn btn-primary btn-full" onclick="login()">Sign in</button>
-    <p id="login-error" style="color:#c0392b;font-size:13px;margin-top:10px;display:none;">Incorrect password or URL.</p>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <header>
     <span>🔔</span>
     <h1>Craigslist Monitor</h1>
-    <span class="worker-url" id="header-url"></span>
-    <button class="btn btn-sm" onclick="logout()" style="margin-left:8px;">Sign out</button>
+    <button class="btn btn-sm" onclick="logout()" style="margin-left:auto;">Sign out</button>
   </header>
-
   <div class="main">
 
-    <!-- Active Searches -->
     <div class="card">
       <div class="card-title">Active searches <span class="badge" id="active-count">0</span></div>
       <div id="search-list"><div class="empty">Loading...</div></div>
     </div>
 
-    <!-- Add New Search -->
     <div class="card">
       <div class="section-title">Add a new search</div>
-
       <div class="field">
         <label>Search name (your label)</label>
         <input id="f-name" type="text" placeholder='e.g. "iMac 27" or "Outboard motor"' />
       </div>
-
       <div class="field">
         <label>Keywords — press Enter or click Add after each</label>
-        <div class="tag-area" id="tag-area">
-          <span class="tag-hint">Keywords appear here as tags</span>
-        </div>
+        <div class="tag-area" id="tag-area"><span class="tag-hint">Keywords appear here as tags</span></div>
         <div class="add-row">
           <input id="f-kw" type="text" placeholder="Type a keyword..." />
           <button class="btn" onclick="addKw()">+ Add</button>
         </div>
       </div>
-
       <div class="row field">
         <div>
           <label>Region</label>
@@ -385,19 +197,11 @@
           </select>
         </div>
       </div>
-
       <div class="price-row field">
-        <div>
-          <label>Min price ($)</label>
-          <input id="f-min" type="number" placeholder="0" min="0" />
-        </div>
+        <div><label>Min price ($)</label><input id="f-min" type="number" placeholder="0" min="0" /></div>
         <div class="price-sep">—</div>
-        <div>
-          <label>Max price ($)</label>
-          <input id="f-max" type="number" placeholder="No limit" min="0" />
-        </div>
+        <div><label>Max price ($)</label><input id="f-max" type="number" placeholder="No limit" min="0" /></div>
       </div>
-
       <div class="divider"></div>
       <div class="btn-group">
         <button class="btn btn-primary" onclick="saveSearch()">💾 Save search</button>
@@ -405,16 +209,11 @@
       </div>
     </div>
 
-    <!-- Settings -->
     <div class="card">
       <div class="card-title">Alert settings</div>
       <div class="row field">
-        <div>
-          <label>Your phone number</label>
-          <input id="s-phone" type="tel" placeholder="+14155550100" />
-        </div>
-        <div>
-          <label>Alert hours</label>
+        <div><label>Your phone number</label><input id="s-phone" type="tel" placeholder="+14155550100" /></div>
+        <div><label>Alert hours</label>
           <select id="s-hours">
             <option value="always">24/7</option>
             <option value="day">8am – 10pm</option>
@@ -425,7 +224,6 @@
       <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
     </div>
 
-    <!-- Activity Log + Manual Run -->
     <div class="card">
       <div class="card-title">Activity log</div>
       <div style="display:flex;gap:8px;margin-bottom:1rem;">
@@ -445,24 +243,43 @@ let WORKER_URL = "";
 let AUTH_KEY = "";
 let keywords = [];
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
-
 async function login() {
-  const url = document.getElementById("login-url").value.trim().replace(/\/$/, "");
+  const url = document.getElementById("login-url").value.trim().replace(/\/+$/, "");
   const pw  = document.getElementById("login-pw").value.trim();
-  if (!url || !pw) return;
+  const errEl = document.getElementById("login-error");
+  errEl.style.display = "none";
+
+  if (!url || !pw) { showErr("Please enter both the Worker URL and password."); return; }
+  if (!url.startsWith("https://")) { showErr("Worker URL must start with https://"); return; }
 
   try {
-    const resp = await fetch(url + "/settings", { headers: { "X-Auth-Key": pw } });
-    if (resp.status === 401) { showLoginError(); return; }
+    const resp = await fetch(url + "/settings", {
+      method: "GET",
+      headers: { "Content-Type": "application/json", "X-Auth-Key": pw }
+    });
+
+    if (resp.status === 401) { showErr("Wrong password. Check your UI_PASSWORD secret."); return; }
+    if (!resp.ok) { showErr("Worker returned an error: " + resp.status); return; }
+
+    const data = await resp.json();
     WORKER_URL = url;
-    AUTH_KEY   = pw;
+    AUTH_KEY = pw;
     localStorage.setItem("cl_url", url);
     localStorage.setItem("cl_key", pw);
-    showApp();
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadSearches();
+    loadSettings();
+    loadLog();
   } catch (e) {
-    showLoginError();
+    showErr("Could not reach Worker. Check the URL is correct.<br>Error: " + e.message);
   }
+}
+
+function showErr(msg) {
+  const el = document.getElementById("login-error");
+  el.innerHTML = msg;
+  el.style.display = "block";
 }
 
 function logout() {
@@ -473,19 +290,6 @@ function logout() {
   document.getElementById("login-screen").style.display = "flex";
 }
 
-function showLoginError() {
-  document.getElementById("login-error").style.display = "block";
-}
-
-async function showApp() {
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  document.getElementById("header-url").textContent = WORKER_URL.replace("https://", "");
-  await Promise.all([loadSearches(), loadSettings(), loadLog()]);
-}
-
-// ── API helpers ───────────────────────────────────────────────────────────────
-
 async function api(method, path, body) {
   const opts = {
     method,
@@ -493,25 +297,23 @@ async function api(method, path, body) {
   };
   if (body) opts.body = JSON.stringify(body);
   const resp = await fetch(WORKER_URL + path, opts);
+  if (!resp.ok) throw new Error("API error " + resp.status);
   return resp.json();
 }
 
-// ── Searches ──────────────────────────────────────────────────────────────────
-
 async function loadSearches() {
-  const searches = await api("GET", "/searches");
-  renderSearches(searches);
+  try {
+    const searches = await api("GET", "/searches");
+    renderSearches(Array.isArray(searches) ? searches : []);
+  } catch(e) {
+    document.getElementById("search-list").innerHTML = '<div class="empty">Error loading searches: ' + e.message + '</div>';
+  }
 }
 
 function renderSearches(searches) {
   const list = document.getElementById("search-list");
-  const count = searches.filter(s => s.active).length;
-  document.getElementById("active-count").textContent = count;
-
-  if (!searches.length) {
-    list.innerHTML = '<div class="empty">No searches yet — add one below.</div>';
-    return;
-  }
+  document.getElementById("active-count").textContent = searches.filter(s => s.active).length;
+  if (!searches.length) { list.innerHTML = '<div class="empty">No searches yet — add one below.</div>'; return; }
   list.innerHTML = searches.map(s => `
     <div class="search-item">
       <div class="dot ${s.active ? "" : "paused"}"></div>
@@ -523,33 +325,28 @@ function renderSearches(searches) {
         <button class="btn btn-sm" onclick="toggleSearch(${s.id})">${s.active ? "Pause" : "Resume"}</button>
         <button class="btn btn-sm btn-danger" onclick="deleteSearch(${s.id})">Delete</button>
       </div>
-    </div>
-  `).join("");
+    </div>`).join("");
 }
 
 async function saveSearch() {
   const name = document.getElementById("f-name").value.trim();
-  if (!name)            { toast("Enter a search name."); return; }
+  if (!name) { toast("Enter a search name."); return; }
   if (!keywords.length) { toast("Add at least one keyword."); return; }
-
   const regionEl = document.getElementById("f-region");
-  const catEl    = document.getElementById("f-cat");
-
+  const catEl = document.getElementById("f-cat");
   const search = {
-    name,
-    keywords: [...keywords],
-    region:        regionEl.value,
-    regionLabel:   regionEl.selectedOptions[0].text,
-    category:      catEl.value,
-    categoryLabel: catEl.selectedOptions[0].text,
+    name, keywords: [...keywords],
+    region: regionEl.value, regionLabel: regionEl.selectedOptions[0].text,
+    category: catEl.value, categoryLabel: catEl.selectedOptions[0].text,
     min_price: document.getElementById("f-min").value ? parseInt(document.getElementById("f-min").value) : null,
     max_price: document.getElementById("f-max").value ? parseInt(document.getElementById("f-max").value) : null,
   };
-
-  await api("POST", "/searches", search);
-  toast("Search saved!");
-  clearForm();
-  loadSearches();
+  try {
+    await api("POST", "/searches", search);
+    toast("Search saved!");
+    clearForm();
+    loadSearches();
+  } catch(e) { toast("Error saving: " + e.message); }
 }
 
 async function toggleSearch(id) {
@@ -560,66 +357,67 @@ async function toggleSearch(id) {
 async function deleteSearch(id) {
   if (!confirm("Delete this search?")) return;
   await api("DELETE", `/searches/${id}`);
-  toast("Search deleted.");
+  toast("Deleted.");
   loadSearches();
 }
 
-// ── Settings ──────────────────────────────────────────────────────────────────
-
 async function loadSettings() {
-  const s = await api("GET", "/settings");
-  document.getElementById("s-phone").value = s.phone_number || "";
-  document.getElementById("s-hours").value = s.alert_hours  || "day";
+  try {
+    const s = await api("GET", "/settings");
+    document.getElementById("s-phone").value = s.phone_number || "";
+    document.getElementById("s-hours").value = s.alert_hours || "day";
+  } catch(e) {}
 }
 
 async function saveSettings() {
-  const phone = document.getElementById("s-phone").value.trim();
-  const hours = document.getElementById("s-hours").value;
-  await api("POST", "/settings", { phone_number: phone, alert_hours: hours });
-  toast("Settings saved!");
+  try {
+    await api("POST", "/settings", {
+      phone_number: document.getElementById("s-phone").value.trim(),
+      alert_hours: document.getElementById("s-hours").value
+    });
+    toast("Settings saved!");
+  } catch(e) { toast("Error: " + e.message); }
 }
 
-// ── Log ───────────────────────────────────────────────────────────────────────
-
 async function loadLog() {
-  const log = await api("GET", "/log");
-  const el = document.getElementById("log-list");
-  if (!log.length) { el.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
-  el.innerHTML = log.map(e => `
-    <div class="log-entry">
-      <span class="log-time">${new Date(e.time).toLocaleString()}</span>
-      <span>${e.message}</span>
-    </div>
-  `).join("");
+  try {
+    const log = await api("GET", "/log");
+    const el = document.getElementById("log-list");
+    if (!log.length) { el.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+    el.innerHTML = log.map(e => `
+      <div class="log-entry">
+        <span class="log-time">${new Date(e.time).toLocaleString()}</span>
+        <span>${e.message}</span>
+      </div>`).join("");
+  } catch(e) {}
 }
 
 async function manualRun() {
-  await api("POST", "/run");
-  toast("Check started — refresh log in a moment.");
-  setTimeout(loadLog, 4000);
+  try {
+    await api("POST", "/run");
+    toast("Check started — refresh log in a few seconds.");
+    setTimeout(loadLog, 5000);
+  } catch(e) { toast("Error: " + e.message); }
 }
 
-// ── Keyword tags ──────────────────────────────────────────────────────────────
-
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("f-kw").addEventListener("keydown", e => {
-    if (e.key === "Enter") addKw();
-  });
-
-  // Auto-login if credentials saved
+  document.getElementById("f-kw").addEventListener("keydown", e => { if (e.key === "Enter") addKw(); });
+  document.getElementById("login-pw").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
   const savedUrl = localStorage.getItem("cl_url");
   const savedKey = localStorage.getItem("cl_key");
   if (savedUrl && savedKey) {
-    document.getElementById("login-url").value = savedUrl;
-    document.getElementById("login-pw").value  = savedKey;
     WORKER_URL = savedUrl; AUTH_KEY = savedKey;
-    showApp();
+    document.getElementById("login-url").value = savedUrl;
+    document.getElementById("login-pw").value = savedKey;
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadSearches(); loadSettings(); loadLog();
   }
 });
 
 function addKw() {
   const input = document.getElementById("f-kw");
-  const val   = input.value.trim();
+  const val = input.value.trim();
   if (!val || keywords.includes(val)) { input.value = ""; return; }
   keywords.push(val);
   renderTags();
@@ -627,29 +425,18 @@ function addKw() {
   input.focus();
 }
 
-function removeKw(i) {
-  keywords.splice(i, 1);
-  renderTags();
-}
+function removeKw(i) { keywords.splice(i, 1); renderTags(); }
 
 function renderTags() {
   const area = document.getElementById("tag-area");
-  if (!keywords.length) {
-    area.innerHTML = '<span class="tag-hint">Keywords appear here as tags</span>';
-    return;
-  }
-  area.innerHTML = keywords.map((k, i) =>
-    `<span class="tag">${k}<button onclick="removeKw(${i})">×</button></span>`
-  ).join("");
+  if (!keywords.length) { area.innerHTML = '<span class="tag-hint">Keywords appear here as tags</span>'; return; }
+  area.innerHTML = keywords.map((k, i) => `<span class="tag">${k}<button onclick="removeKw(${i})">×</button></span>`).join("");
 }
 
 function clearForm() {
   ["f-name","f-min","f-max"].forEach(id => document.getElementById(id).value = "");
-  keywords = [];
-  renderTags();
+  keywords = []; renderTags();
 }
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
 
 function toast(msg) {
   const el = document.getElementById("toast");
