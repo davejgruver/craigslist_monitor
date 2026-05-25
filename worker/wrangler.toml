@@ -1,0 +1,19 @@
+name = "craigslist-monitor"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# KV namespace — you'll fill in the ID after running: npx wrangler kv:namespace create CL_KV
+[[kv_namespaces]]
+binding = "CL_KV"
+id = "f06946b8a37b4ec3956854bdb353a0a0"
+
+# Cron schedule — runs every 15 minutes
+# Change "*/15" to "*/10" for every 10 min, "*/30" for every 30 min, etc.
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Secrets (set via terminal, NOT stored here):
+# npx wrangler secret put TWILIO_ACCOUNT_SID
+# npx wrangler secret put TWILIO_AUTH_TOKEN
+# npx wrangler secret put TWILIO_FROM_NUMBER
+# npx wrangler secret put UI_PASSWORD
