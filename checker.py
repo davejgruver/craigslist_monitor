@@ -1,12 +1,10 @@
 """
 Craigslist Alert Checker — runs via GitHub Actions
-Reads searches from Cloudflare KV, checks Craigslist, texts via Twilio
-Uses HTML scraping instead of RSS to avoid 403 blocks
+Uses Craigslist's internal JSON search API
 """
 
-import os, json, hashlib, requests, re, time, random
+import os, json, hashlib, requests, time, random
 from datetime import datetime, timezone
-from html.parser import HTMLParser
 
 # ── Cloudflare KV helpers ─────────────────────────────────────────────────────
 
@@ -58,115 +56,120 @@ def is_alert_hour(setting):
     if setting == "business": return 9 <= hour < 17
     return True
 
-# ── Craigslist HTML scraping ──────────────────────────────────────────────────
+# ── Craigslist JSON API ───────────────────────────────────────────────────────
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "X-Requested-With": "XMLHttpRequest",
+    "Connection": "keep-alive",
+}
 
 def build_search_url(search):
     region   = search["region"]
     category = search["category"]
     keywords = search.get("keywords", [])
-    query    = "+".join(k.replace(" ", "+") for k in keywords)
-    url = f"https://{region}.craigslist.org/search/{category}?sort=date"
-    if query:
-        url += f"&query={query}"
+    query    = " ".join(keywords)
+    
+    # Use Craigslist's JSON search endpoint
+    url = f"https://{region}.craigslist.org/search/{category}?format=rss&sort=date"
+    
+    # Actually use the JSON API
+    params = {
+        "query": query,
+        "sort": "date",
+        "srchType": "A",  # all words
+    }
     if search.get("min_price"):
-        url += f"&min_price={search['min_price']}"
+        params["min_price"] = search["min_price"]
     if search.get("max_price"):
-        url += f"&max_price={search['max_price']}"
-    return url
+        params["max_price"] = search["max_price"]
+    
+    param_str = "&".join(f"{k}={requests.utils.quote(str(v))}" for k, v in params.items())
+    return f"https://{region}.craigslist.org/search/{category}?{param_str}"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Cache-Control": "no-cache",
-}
+def fetch_posts(search):
+    region   = search["region"]
+    category = search["category"]
+    keywords = search.get("keywords", [])
+    query    = " ".join(keywords)
 
-def fetch_posts(search_url):
+    # Craigslist internal JSON API
+    params = {
+        "query": query,
+        "sort": "date",
+        "srchType": "A",
+        "format": "json",
+    }
+    if search.get("min_price"):
+        params["min_price"] = search["min_price"]
+    if search.get("max_price"):
+        params["max_price"] = search["max_price"]
+
+    url = f"https://{region}.craigslist.org/search/{category}"
+    
     try:
         time.sleep(random.uniform(1, 2))
-        print(f"  Fetching: {search_url}")
-        r = requests.get(search_url, headers=HEADERS, timeout=20)
+        print(f"  Fetching JSON: {url}?query={query}")
+        r = requests.get(url, params=params, headers=HEADERS, timeout=20)
         print(f"  Status: {r.status_code}")
+        
         if r.status_code != 200:
+            print(f"  Response: {r.text[:200]}")
             return []
-        return parse_html(r.text, search_url)
+
+        # Try parsing as JSON first
+        try:
+            data = r.json()
+            print(f"  JSON keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+            
+            # Craigslist JSON API returns items in data['data']['items']
+            items = []
+            if isinstance(data, dict):
+                items = (data.get("data", {}).get("items", []) or
+                        data.get("items", []) or
+                        data.get("results", []))
+            elif isinstance(data, list):
+                items = data
+                
+            print(f"  Items found: {len(items)}")
+            
+            posts = []
+            for item in items:
+                # Handle different possible structures
+                link  = item.get("url") or item.get("link") or ""
+                title = item.get("title") or item.get("name") or ""
+                price = item.get("price") or item.get("ask") or ""
+                
+                if not link and item.get("id"):
+                    link = f"https://{region}.craigslist.org{item.get('path', '')}"
+                
+                if not link:
+                    continue
+                    
+                if isinstance(price, (int, float)):
+                    price = f"${int(price)}"
+                    
+                post_id = hashlib.md5(str(link).encode()).hexdigest()
+                posts.append({
+                    "id": post_id,
+                    "title": str(title).strip(),
+                    "link": str(link).strip(),
+                    "price": str(price).strip() if price else ""
+                })
+            return posts
+            
+        except json.JSONDecodeError:
+            # Not JSON — print what we got to understand the format
+            print(f"  Not JSON. Content-Type: {r.headers.get('Content-Type', 'unknown')}")
+            print(f"  First 300 chars: {r.text[:300]}")
+            return []
+            
     except Exception as e:
         print(f"  Fetch error: {e}")
         return []
-
-def parse_html(html, base_url):
-    """Extract listings from Craigslist search results page."""
-    posts = []
-    region_base = "/".join(base_url.split("/")[:3])  # e.g. https://sfbay.craigslist.org
-
-    # Match listing items — Craigslist uses <li class="cl-search-result...">
-    # Extract title, link, and price using regex on the HTML
-    
-    # Find all listing links and titles
-    # Pattern matches: <a class="cl-app-anchor..." href="/url/..."><span ...>Title</span>
-    link_pattern = re.compile(
-        r'href="(/[^"]+/d/[^"]+\.html)"[^>]*>.*?<span[^>]*class="[^"]*label[^"]*"[^>]*>([^<]+)</span>',
-        re.DOTALL
-    )
-    
-    # Also try JSON-LD structured data which Craigslist sometimes includes
-    json_pattern = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.DOTALL)
-    
-    # Try extracting from JSON data embedded in page
-    data_pattern = re.compile(r'"url":"(https://[^"]+craigslist[^"]+)"[^}]*"name":"([^"]+)"')
-    
-    # Most reliable: find all posting links
-    posting_pattern = re.compile(r'href="(https?://[^"]*craigslist\.org/[^"]+/d/[^"]+\.html)"')
-    title_pattern   = re.compile(r'<span[^>]+class="[^"]*posting-title[^"]*"[^>]*>.*?<span[^>]+class="[^"]*label[^"]*"[^>]*>([^<]+)</span>', re.DOTALL)
-    
-    # Try to find listing blocks
-    # Craigslist new layout uses gallery items
-    gallery_pattern = re.compile(
-        r'<li[^>]+class="[^"]*cl-search-result[^"]*"[^>]*>(.*?)</li>',
-        re.DOTALL
-    )
-    
-    found_links = set()
-    
-    for block in gallery_pattern.findall(html):
-        link_m  = re.search(r'href="(/[^"]+/d/[^"]+\.html)"', block)
-        title_m = re.search(r'class="[^"]*label[^"]*"[^>]*>([^<]+)<', block)
-        price_m = re.search(r'class="[^"]*price[^"]*"[^>]*>\s*(\$[\d,]+)', block)
-        
-        if link_m and title_m:
-            link  = region_base + link_m.group(1) if link_m.group(1).startswith("/") else link_m.group(1)
-            title = title_m.group(1).strip()
-            price = price_m.group(1).strip() if price_m else ""
-            
-            if link not in found_links:
-                found_links.add(link)
-                post_id = hashlib.md5(link.encode()).hexdigest()
-                posts.append({"id": post_id, "title": title, "link": link, "price": price})
-
-    print(f"  Parsed {len(posts)} listings from HTML")
-    
-    # If we got nothing, print a snippet of the HTML to help debug
-    if len(posts) == 0:
-        print(f"  HTML snippet (first 500 chars): {html[:500]}")
-    
-    return posts
-
-# ── Price matching ────────────────────────────────────────────────────────────
-
-def matches_price(post, min_price, max_price):
-    if not min_price and not max_price:
-        return True
-    if not post["price"]:
-        return True
-    try:
-        price = int(post["price"].replace("$", "").replace(",", "").strip())
-    except ValueError:
-        return True
-    if min_price and price < int(min_price): return False
-    if max_price and price > int(max_price): return False
-    return True
 
 # ── Log helper ────────────────────────────────────────────────────────────────
 
@@ -218,8 +221,7 @@ def main():
     for search in active:
         name = search["name"]
         print(f"\nChecking: {name}")
-        search_url = build_search_url(search)
-        posts = fetch_posts(search_url)
+        posts = fetch_posts(search)
         print(f"  Total posts: {len(posts)}")
 
         new_posts = [p for p in posts if p["id"] not in seen]
