@@ -77,8 +77,23 @@ def build_rss_url(search):
 
 def fetch_posts(rss_url):
     try:
+        # Try without the format=rss parameter
+        clean_url = rss_url.replace("?format=rss&", "?").replace("?format=rss", "")
+        rss_url_v2 = clean_url + ("&" if "?" in clean_url else "?") + "format=rss"
+        
         print(f"  Fetching: {rss_url}")
-        r = requests.get(rss_url, headers=HEADERS, timeout=15)
+        import time, random
+        time.sleep(random.uniform(1, 3))
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Referer": f"https://{rss_url.split('/')[2]}/",
+        }
+        r = requests.get(rss_url, headers=headers, timeout=15)
         print(f"  Status: {r.status_code}")
         if r.status_code != 200:
             return []
